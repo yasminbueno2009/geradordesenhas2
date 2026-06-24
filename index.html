@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KeyForge — Gerador de Senhas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+ 
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🔑</div>
+      <div class="logo-text">Key<span>Forge</span></div>
+    </div>
+    <p>Gere senhas seguras com criptografia de verdade</p>
+  </header>
+ 
+  <!-- ── Main card ── -->
+  <div class="card">
+ 
+    <!-- Mode tabs -->
+    <div class="mode-tabs" role="tablist">
+      <button class="tab-btn active" id="tab-random" role="tab" aria-selected="true" onclick="setMode('random')">Aleatória</button>
+      <button class="tab-btn" id="tab-phrase" role="tab" aria-selected="false" onclick="setMode('phrase')">Passphrase</button>
+      <button class="tab-btn" id="tab-pin" role="tab" aria-selected="false" onclick="setMode('pin')">PIN</button>
+    </div>
+ 
+    <!-- Password output -->
+    <div class="pwd-wrap">
+      <textarea id="password-display" rows="2" readonly aria-label="Senha gerada">—</textarea>
+      <div class="action-btns">
+        <button class="icon-btn" id="copy-btn" title="Copiar senha" aria-label="Copiar senha" onclick="copyPassword()">📋</button>
+        <button class="icon-btn" title="Nova senha" aria-label="Gerar nova senha" onclick="generate()">🔄</button>
+      </div>
+    </div>
+ 
+    <!-- Strength indicator -->
+    <div class="strength-row">
+      <div class="strength-bars" role="meter" aria-label="Força da senha" id="strength-bars">
+        <div class="s-bar" id="s1"></div>
+        <div class="s-bar" id="s2"></div>
+        <div class="s-bar" id="s3"></div>
+        <div class="s-bar" id="s4"></div>
+      </div>
+      <span class="entropy-badge" id="entropy-badge">0 bits</span>
+      <span class="strength-label" id="strength-label">—</span>
+    </div>
+ 
+    <!-- Length -->
+    <div id="length-section">
+      <div class="section-label">Comprimento</div>
+      <div class="slider-row">
+        <span class="slider-val" id="len-display">16</span>
+        <input type="range" id="length-slider" min="4" max="128" value="16"
+               aria-label="Comprimento da senha" oninput="onSlider(this)" />
+      </div>
+    </div>
+ 
+    <!-- Phrase settings (words count + separator) -->
+    <div id="phrase-settings">
+      <div class="section-label">Número de palavras</div>
+      <div class="slider-row" style="margin-bottom:16px">
+        <span class="slider-val" id="words-display">4</span>
+        <input type="range" id="words-slider" min="3" max="10" value="4"
+               aria-label="Número de palavras" oninput="onWordsSlider(this)" />
+      </div>
+      <div class="section-label" style="margin-top:0">Separador</div>
+      <div class="phrase-row">
+        <select id="sep-select" aria-label="Separador de palavras">
+          <option value="-">Hífen  ( - )</option>
+          <option value=".">Ponto  ( . )</option>
+          <option value="_">Sublinhado  ( _ )</option>
+          <option value=" ">Espaço</option>
+          <option value="@">Arroba  ( @ )</option>
+          <option value="">Sem separador</option>
+        </select>
+      </div>
+    </div>
+ 
+    <!-- Character toggles (hidden in passphrase/pin modes) -->
+    <div id="char-toggles">
+      <div class="section-label">Caracteres</div>
+      <div class="toggles">
+        <label class="toggle-item active" id="lbl-upper" onclick="toggleChar('upper',this)">
+          <input type="checkbox" id="cb-upper" checked aria-label="Letras maiúsculas" />
+          <div class="toggle-info">
+            <strong>Maiúsculas</strong>
+            <span>A B C … Z</span>
+          </div>
+        </label>
+        <label class="toggle-item active" id="lbl-lower" onclick="toggleChar('lower',this)">
+          <input type="checkbox" id="cb-lower" checked aria-label="Letras minúsculas" />
+          <div class="toggle-info">
+            <strong>Minúsculas</strong>
+            <span>a b c … z</span>
+          </div>
+        </label>
+        <label class="toggle-item active" id="lbl-nums" onclick="toggleChar('nums',this)">
+          <input type="checkbox" id="cb-nums" checked aria-label="Números" />
+          <div class="toggle-info">
+            <strong>Números</strong>
+            <span>0 1 2 … 9</span>
+          </div>
+        </label>
+        <label class="toggle-item" id="lbl-syms" onclick="toggleChar('syms',this)">
+          <input type="checkbox" id="cb-syms" aria-label="Símbolos especiais" />
+          <div class="toggle-info">
+            <strong>Símbolos</strong>
+            <span>! @ # $ % …</span>
+          </div>
+        </label>
+      </div>
+ 
+      <!-- Exclude chars -->
+      <div class="exclude-row">
+        <label for="exclude-input">Excluir</label>
+        <input type="text" id="exclude-input" placeholder="ex: 0 O l 1 I" maxlength="40" aria-label="Caracteres a excluir" oninput="generate()" />
+      </div>
+    </div>
+ 
+    <!-- Generate -->
+    <button class="btn-generate" onclick="generate()" aria-label="Gerar nova senha">⚡ Gerar Senha</button>
+  </div>
+ 
+  <!-- ── History ── -->
+  <div class="history-card">
+    <div class="history-header">
+      <h3>Histórico</h3>
+      <button class="clear-btn" onclick="clearHistory()">Limpar</button>
+    </div>
+    <div class="history-list" id="history-list">
+      <div style="color:var(--muted);font-size:13px;text-align:center;padding:12px 0">Nenhuma senha gerada ainda</div>
+    </div>
+  </div>
+ 
+  <!-- ── Tips ── -->
+  <div class="tips-card">
+    <h3>Boas práticas</h3>
+    <div class="tip"><span class="tip-icon">🔒</span><span>Use senhas únicas para cada conta — nunca reutilize.</span></div>
+    <div class="tip"><span class="tip-icon">🗂️</span><span>Armazene suas senhas em um gerenciador confiável (Bitwarden, 1Password, KeePass).</span></div>
+    <div class="tip"><span class="tip-icon">📏</span><span>Prefira senhas com 16+ caracteres; comprimento bate complexidade.</span></div>
+    <div class="tip"><span class="tip-icon">🔑</span><span>Ative autenticação em dois fatores (2FA) em todas as contas críticas.</span></div>
+    <div class="tip"><span class="tip-icon">🕵️</span><span>Esta página não envia seus dados a nenhum servidor — tudo é gerado no seu navegador.</span></div>
+  </div>
+ 
+  <div class="toast" id="toast"></div>
+ 
+  <script src="script.js"></script>
+</body>
+</html>
+ 
